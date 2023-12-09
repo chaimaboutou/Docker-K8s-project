@@ -1,0 +1,46 @@
+version: "3.8"
+services:
+  db:
+    image: localhost:5000/mysql:latest
+    container_name: mysql-container
+    environment:
+      MYSQL_DATABASE: testdb
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 3307:3306
+    networks:
+      - my-network
+    volumes:
+      - db_config:/etc/mysql/conf.d  # Volume for MySQL configuration
+      - db_data:/var/lib/mysql       # Volume for MySQL data
+  backend:
+    image: localhost:5000/backend-project:1.0.0
+    container_name: backend-spring
+    ports:
+      - 8080:8080
+    networks:
+      - my-network
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/testdb?allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - db
+  frontend:
+    image: localhost:5000/frontend-project:1.0.0
+    container_name: frontend-angular
+    ports:
+      - 8081:80
+    networks:
+      - my-network
+    depends_on:
+      - backend
+
+networks:
+  my-network:
+    driver: bridge
+    
+volumes:
+  db_config:
+  db_data:
